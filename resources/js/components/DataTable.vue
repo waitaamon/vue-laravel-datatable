@@ -3,12 +3,46 @@
         <div class="card-header">{{ response.table}}</div>
 
         <div class="card-body">
+            <form action="#" @submit.prevent="getRecords">
+                <label for="">Search</label>
+                <div class="row row-fluid">
+                    <div class="form-group col-md-3">
+                        <select class="form-control" v-model="search.column">
+                            <option :value="column" v-for="column in response.displayable">{{ column }}</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <select class="form-control" v-model="search.operator">
+                            <option value="equals"> = </option>
+                            <option value="contains"> contains </option>
+                            <option value="starts_with"> starts with </option>
+                            <option value="greater_than"> greater than </option>
+                            <option value="less_than"> less than </option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <div class="input-group">
+                            <input type="text" id="search"  class="form-control" v-model="search.value">
+                            <span class="input-group-btn">
+                                <button class="btn btn-secondary" type="submit">Search</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </form>
             <div class="row">
                 <div class="form-group col-md-10">
                     <label for="filter">Quick search current results</label>
                     <input type="text" id="filter" class="form-control" v-model="quickSearchQuery">
                 </div>
-                <div class="form-group col-md-2"></div>
+                <div class="form-group col-md-2">
+                    <label for="limit">Limit</label>
+                    <select  id="limit" v-model="limit" class="form-control" @change="getRecords">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="">All</option>
+                    </select>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-striped">
@@ -31,7 +65,7 @@
                     <tr v-for="record in filteredRecords">
                         <td v-for="columnValue, column in record">{{ columnValue}}</td>
                         <td>
-
+                            <a href="#" @click="edit(record)">Edit</a>
                         </td>
                     </tr>
                     </tbody>
@@ -43,6 +77,7 @@
 </template>
 
 <script>
+    const queryString = require('query-string')
     export default {
         props: ['endpoint'],
         data () {
@@ -56,7 +91,13 @@
                     key: 'id',
                     order: 'asc'
                 },
-                quickSearchQuery: ''
+                search: {
+                    value: '',
+                    operator: 'equals',
+                    column: 'id'
+                },
+                quickSearchQuery: '',
+                limit: 50
             }
         },
         computed: {
@@ -86,9 +127,15 @@
         },
         methods: {
             getRecords () {
-                return axios.get(`${this.endpoint}`).then(response => {
+                return axios.get(`${this.endpoint}?${this.getQueryParameter()}`).then(response => {
                     this.response = response.data.data
                 })
+            },
+            getQueryParameter () {
+              return queryString.stringify({
+                  limit: this.limit,
+                  ...this.search
+              })
             },
             sortBy(column) {
                 this.sort.key = column
