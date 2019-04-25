@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-12">
-                <example-component></example-component>
+                <data-table endpoint="{{ route('users.index') }}"></data-table>
             </div>
         </div>
     </div>
